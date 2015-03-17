@@ -120,18 +120,21 @@ public class Senku {
 
     private int getMovimiento() {
 
-        if (filaDestino > filaOrigen) {
-            movimiento = MOVER_ABAJO;
+        if (isMovimientoVertical()) {
+            if (filaDestino > filaOrigen) {
+                movimiento = MOVER_ABAJO;
+            } else {
+                movimiento = MOVER_ARRIBA;
+            }
         } else {
-            movimiento = MOVER_ARRIBA;
+            if (isMovimientoHorizontal()) {
+                if (columDestino > columOrigen) {
+                    movimiento = MOVER_DER;
+                } else {
+                    movimiento = MOVER_IZQ;
+                }
+            }
         }
-
-        if (columDestino > columOrigen) {
-            movimiento = MOVER_DER;
-        } else {
-            movimiento = MOVER_IZQ;
-        }
-
         return movimiento;
     }
 
@@ -145,9 +148,11 @@ public class Senku {
         movimientoValido = true;
 
         if (isMovimientoVertical()) {
-            
+            System.out.println("Prueba vertical");
+            System.out.println("movimiento" + this.getMovimiento());
             switch (this.getMovimiento()) {
                 case MOVER_ARRIBA:
+                    System.out.println("Prueba arriba");
                     if (tablero[filaOrigen - 1][columOrigen] == FICHA
                             && tablero[filaOrigen - 2][columOrigen] == HUECO) {
                         tablero[filaOrigen - 1][columOrigen] = HUECO;
@@ -202,15 +207,41 @@ public class Senku {
 
     public void deshacerMovimiento() {
 
-        this.filaOrigen = listaMovimientos.get(listaMovimientos.size() - 1).getNuevaFila();
-        this.filaDestino = listaMovimientos.get(listaMovimientos.size() - 1).getFilaActual();
-        this.columOrigen = listaMovimientos.get(listaMovimientos.size() - 1).getNuevaColumn();
-        this.columDestino = listaMovimientos.get(listaMovimientos.size() - 1).getColumActual();
+        this.filaOrigen = listaMovimientos.get(listaMovimientos.size() - 1).getFilaDestino();
+        this.filaDestino = listaMovimientos.get(listaMovimientos.size() - 1).getFilaOrigen();
+        this.columOrigen = listaMovimientos.get(listaMovimientos.size() - 1).getColumDestino();
+        this.columDestino = listaMovimientos.get(listaMovimientos.size() - 1).getColumOrigen();
 
         if (isMovimientoVertical()) {
-            
+            switch (this.getMovimiento()) {
+                case MOVER_ARRIBA:
+                    tablero[filaOrigen][columOrigen] = HUECO;
+                    tablero[filaDestino][columDestino] = FICHA;
+                    tablero[filaOrigen + 1][columOrigen] = FICHA;
+                    break;
+                case MOVER_ABAJO:
+                    tablero[filaOrigen][columOrigen] = FICHA;
+                    tablero[filaDestino][columDestino] = HUECO;
+                    tablero[filaOrigen - 1][columOrigen] = FICHA;
+                    break;
+            }
+        } else {
+            if (isMovimientoHorizontal()) {
+                switch (this.getMovimiento()) {
+                    case MOVER_IZQ:
+                        tablero[filaOrigen][columOrigen] = HUECO;
+                        tablero[filaDestino][columDestino] = FICHA;
+                        tablero[filaOrigen][columOrigen - 1] = FICHA;
+                        break;
+                    case MOVER_DER:
+                        tablero[filaOrigen][columOrigen] = HUECO;
+                        tablero[filaDestino][columDestino] = FICHA;
+                        tablero[filaOrigen][columOrigen + 1] = FICHA;
+                        break;
+                }
+            }
         }
-
+        listaMovimientos.remove(listaMovimientos.size() - 1);
     }
 
 }
