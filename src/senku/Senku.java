@@ -1,7 +1,18 @@
 package senku;
 
 import com.sun.org.apache.xml.internal.serializer.OutputPropertiesFactory;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,20 +31,20 @@ import org.w3c.dom.Text;
 
 public class Senku {
 
-    public static final int FILAS = 7;
-    public static final int COLUMNAS = 7;
+    private int filas;
+    private int columnas;
 
     private int movimiento;
     private boolean movimientoValido;
 
-    public final int MOVER_ARRIBA = 1;
-    public final int MOVER_ABAJO = 2;
-    public final int MOVER_IZQ = 3;
-    public final int MOVER_DER = 4;
+    private final int MOVER_ARRIBA = 1;
+    private final int MOVER_ABAJO = 2;
+    private final int MOVER_IZQ = 3;
+    private final int MOVER_DER = 4;
 
-    public final char LIMITE = ' ';
-    public final char FICHA = '#';
-    public final char HUECO = '.';
+    private final char LIMITE = ' ';
+    private final char FICHA = '#';
+    private final char HUECO = '.';
 
     private int filaOrigen;
     private int filaDestino;
@@ -45,13 +56,27 @@ public class Senku {
     private Movimientos movimientos;
     private ArrayList<Movimientos> listaMovimientos = new ArrayList();
 
+    BufferedWriter bw = null;
+
     public Senku() {
-        tablero = new char[FILAS][COLUMNAS];
+        filas = 7;
+        columnas = 7;
+        tablero = new char[filas][columnas];
     }
 
-    public void crearPatron() {
-        for (int i = 0; i < FILAS; i++) {
-            for (int j = 0; j < COLUMNAS; j++) {
+    public Senku(String ruta_archivo) {
+
+        this.filas = this.getTamFilas(ruta_archivo);
+        this.columnas = this.getTamColumnas(ruta_archivo);
+
+        tablero = new char[filas][columnas];
+    }
+
+    public void crearPatronClasico() {
+        filas = 7;
+        columnas = 7;
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
                 if (i < 2 || i > 4) {
                     switch (j) {
                         case 0:
@@ -61,11 +86,7 @@ public class Senku {
                             tablero[i][j] = LIMITE;
                             break;
                         case 2:
-                            tablero[i][j] = FICHA;
-                            break;
                         case 3:
-                            tablero[i][j] = FICHA;
-                            break;
                         case 4:
                             tablero[i][j] = FICHA;
                             break;
@@ -88,14 +109,14 @@ public class Senku {
     public String pintarTablero() {
 
         String texto = " ";
-        for (int j = 0; j < COLUMNAS; j++) {
-            texto += j;
+        for (int i = 0; i < columnas; i++) {
+            texto += i;
         }
         texto += "\n";
 
-        for (int i = 0; i < FILAS; i++) {
+        for (int i = 0; i < filas; i++) {
             texto += i;
-            for (int j = 0; j < COLUMNAS; j++) {
+            for (int j = 0; j < columnas; j++) {
                 texto += tablero[i][j];
             }
             texto += "\n";
@@ -258,15 +279,6 @@ public class Senku {
         }
     }
 
-    private String getListaMovimientos() {
-        String texto = "";
-
-        for (int i = 0; i < listaMovimientos.size(); i++) {
-            texto += "Movimiento: " + (i + 1) + " " + listaMovimientos.get(i).toString() + "\n";
-        }
-        return texto;
-    }
-
     public void listaMovimientosToXML() {
         try {
             DocumentBuilderFactory fábricaCreadorDocumento = DocumentBuilderFactory.newInstance();
@@ -345,4 +357,128 @@ public class Senku {
             ex.printStackTrace();
         }
     }
+
+    private int getTamFilas(String ruta_Archivo) {
+        int filas = 0;
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(ruta_Archivo)));
+        try {
+            //Leer la primera línea, guardando en un String
+            String texto = br.readLine();
+            //Repetir mientras no se llegue al final del fichero
+            while (texto != null) {
+                texto = br.readLine();
+                filas++;
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: Fichero no encontrado");
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error de lectura del fichero");
+            System.out.println(e.getMessage());
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error al cerrar el fichero");
+                System.out.println(e.getMessage());
+            }
+        }
+        return filas;
+    }
+
+    private int getTamColumnas(String ruta_Archivo) {
+        int columnas = 0;
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(ruta_Archivo)));
+
+        try {
+            String texto = br.readLine();
+            columnas = texto.length();
+        } catch (IOException ex) {
+            Logger.getLogger(Senku.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return columnas;
+    }
+
+    public void cambiarVersion(String ruta_archivo) {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(ruta_archivo)));
+
+        try {
+            String texto = br.readLine();
+            while (texto != null) {
+                for (int i = 0; i < filas; i++) {
+                    for (int j = 0; j < columnas; j++) {
+                        tablero[i][j] = texto.charAt(j);
+                    }
+                    texto = br.readLine();
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Senku.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private int recuentoFichas() {
+        int fichas = 0;
+        for (int i = 0; i < filas; i++) {
+            for (int j = 0; j < columnas; j++) {
+                if (tablero[i][j] == '#') {
+                    fichas++;
+                }
+            }
+        }
+        return fichas;
+    }
+
+    public void guardarDatosPartida() {
+
+        String texto = "";
+        File datosPartida = new File("datos_partida.csv");
+
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat formatoHoraFecha = new SimpleDateFormat("dd/MM/yy - HH:mm");
+
+        int variante = Ventana.getVariante();   
+
+        try {
+            bw = new BufferedWriter(new FileWriter(datosPartida, true));
+            if (datosPartida.length() == 0) {
+                texto = "Fecha y hora;variante;fichas;duración\n";
+            }
+            texto += formatoHoraFecha.format(cal.getTime()) + ";";
+            switch (variante) {
+                case Ventana.FRANCESA:
+                    texto += "francesa;";
+                    break;
+                case Ventana.ALEMANA:
+                    texto += "aleamana;";
+                    break;
+                case Ventana.ASIMETRICA:
+                    texto += "asimétrica;";
+                    break;
+                case Ventana.DIAMANTE:
+                    texto += "diamante;";
+                    break;
+                default:
+                    texto += "clásica;";
+            }
+            texto += recuentoFichas() + ";" + Ventana.getDuracion();
+            System.out.println(texto);
+            bw.write(texto + "\n");
+        } catch (IOException ex) {
+            Logger.getLogger(Senku.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (bw != null) {
+                    bw.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Error al cerrar el fichero");
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
 }

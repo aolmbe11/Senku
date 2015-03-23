@@ -12,7 +12,7 @@ import org.apache.commons.lang3.time.StopWatch;
 public class Ventana extends javax.swing.JFrame {
 
     private Senku senku = new Senku();
-    
+
     private ResourceBundle bundle;
 
     private static int variante;
@@ -46,7 +46,7 @@ public class Ventana extends javax.swing.JFrame {
         initComponents();
         senku.crearPatronClasico();
         jTextArea1.append(senku.pintarTablero());
-        
+
     }
 
     @SuppressWarnings("unchecked")
@@ -229,14 +229,18 @@ public class Ventana extends javax.swing.JFrame {
             columActual = Integer.valueOf(jT_ColumnaActual.getText());
             nuevaColum = Integer.valueOf(jT_NuevaColumna.getText());
         } catch (NumberFormatException e) {
-            JOptionPane.showConfirmDialog(this, "Debe introducir un número entero");
+            JOptionPane.showMessageDialog(this, bundle.getString("mensajeEnteros"));
         }
 
-        senku.mover(filaActual, nuevaFila, columActual, nuevaColum);
-        if (senku.isMovimientoValido()) {
-            jTextArea1.setText(senku.pintarTablero());
-        } else {
-            JOptionPane.showMessageDialog(this, "No se puede realizar ese movimiento");
+        try {
+            senku.mover(filaActual, nuevaFila, columActual, nuevaColum);
+            if (senku.isMovimientoValido()) {
+                jTextArea1.setText(senku.pintarTablero());
+            } else {
+                JOptionPane.showMessageDialog(this, bundle.getString("mensajeMovimientoErroneo"));
+            }
+        }catch(ArrayIndexOutOfBoundsException e){
+            //JOptionPane.showMessageDialog(this, bundle.getString("mensajePosiciones"));
         }
 
 
@@ -248,7 +252,7 @@ public class Ventana extends javax.swing.JFrame {
             senku.pintarTablero();
             jTextArea1.setText(senku.pintarTablero());
         } catch (IndexOutOfBoundsException e) {
-            JOptionPane.showMessageDialog(this, "No hay más movimientos.");
+            JOptionPane.showMessageDialog(this, bundle.getString("mensajeNoMasMovimientos"));
         }
     }//GEN-LAST:event_botonDeshacerActionPerformed
 
