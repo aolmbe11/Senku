@@ -42,7 +42,8 @@ public class Ventana extends javax.swing.JFrame {
     }
 
     public Ventana() {
-        bundle = ResourceBundle.getBundle("senku/resources/strings", Locale.getDefault());
+        Locale.setDefault(Locale.ENGLISH);
+        bundle = ResourceBundle.getBundle("senku/resources/strings", Locale.ENGLISH);
         initComponents();
         senku.crearPatronClasico();
         jTextArea1.append(senku.pintarTablero());
